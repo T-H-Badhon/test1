@@ -1,55 +1,61 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const loginZodSchema = z.object({
-    body: z.object({
-        email: z.string({
-            required_error: 'Email is required',
-        }),
-        password: z.string({
-            required_error: 'Password is required',
-        }),
+  body: z.object({
+    email: z.string({
+      required_error: "Email is required",
     }),
+    password: z.string({
+      required_error: "Password is required",
+    }),
+  }),
 });
 
 const refreshTokenZodSchema = z.object({
-    cookies: z.object({
-        refreshToken: z.string({
-            required_error: 'Refresh Token is required',
-        }),
+  cookies: z.object({
+    refreshToken: z.string({
+      required_error: "Refresh Token is required",
     }),
+  }),
 });
-
-
 
 const registerSchema = z.object({
-    body:z.object({
+  body: z.object({
     name: z.string({
-        required_error:'Name Is Required'
+      required_error: "Name Is Required",
     }),
     email: z.string({
-        required_error:"Email is required"
+      required_error: "Email is required",
     }),
     password: z.string({
-        required_error:"Password is required"
+      required_error: "Password is required",
     }),
     bio: z.string({
-        required_error:"Bio is required"
+      required_error: "Bio is required",
     }),
     profession: z.string({
-        required_error:"Profession is required"
+      required_error: "Profession is required",
     }),
     address: z.string({
-        required_error:"Address is required"
+      required_error: "Address is required",
     }),
-    })
+  }),
 });
 
-
-
-
+const changePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string({
+      required_error: "Current Password is required",
+    }),
+    newPassword: z.string({
+      required_error: "New Password is required",
+    }),
+  }),
+});
 
 export const AuthValidation = {
-    loginZodSchema,
-    refreshTokenZodSchema,
-    registerSchema
+  loginZodSchema,
+  refreshTokenZodSchema,
+  registerSchema,
+  changePasswordSchema,
 };

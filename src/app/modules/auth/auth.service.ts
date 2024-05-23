@@ -1,66 +1,69 @@
-import prisma from "../../utils/prisma"
-import jwt, { JwtPayload, Secret } from 'jsonwebtoken'
-import bcrypt from 'bcrypt';
+import prisma from "../../utils/prisma";
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import generateToken from "../../utils/generateToken";
 import { decodedToken } from "../../utils/decodeToken";
 import config from "../../../config";
 
-const logInUser = async(payload:{
-    email:string,
-    password:string
-}) => {
-    const userData = await prisma.user.findUniqueOrThrow({
-        where:{
-            email:payload?.email,
-        }
-    })
-    const isCorrectPassword:Boolean = await bcrypt.compareSync(payload.password, userData.password)
-    if(!isCorrectPassword){
-             throw new Error('Wrong Password')
-        }
-        // console.log(config.jwt.expires_in)
-    const accessToken = generateToken({
-        email:userData.email,
-        id:userData.id,
-        role:userData.role
-    });
-    const refreshToken =generateToken({
-        email:userData.email,
-        id:userData.id,
-        role:userData.role
-    }, )
-    return {
-        accessToken,
-        refreshToken,
-        user: {
-            id: userData.id,
-            name: userData.username,
-            email: userData.email,
-            role:userData.role
-        }
-    };
-}
+const logInUser = async (payload: { email: string; password: string }) => {
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: payload?.email,
+    },
+  });
+  const isCorrectPassword: Boolean = await bcrypt.compareSync(
+    payload.password,
+    userData.password
+  );
+  if (!isCorrectPassword) {
+    throw new Error("Wrong Password");
+  }
+  // console.log(config.jwt.expires_in)
+  const accessToken = generateToken({
+    email: userData.email,
+    id: userData.id,
+    role: userData.role,
+  });
+  const refreshToken = generateToken({
+    email: userData.email,
+    id: userData.id,
+    role: userData.role,
+  });
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: userData.id,
+      name: userData.username,
+      email: userData.email,
+      role: userData.role,
+    },
+  };
+};
 
-const refreshToken = async(token:string)=>{
-    let decodedData;
-    try {
-         decodedData =decodedToken.verifyToken(token,config.jwt.refresh_token_secret as Secret)
-    } catch (err) {
-        throw new Error('You are not authorized')
-    }
-    const isUserExist = await prisma.user.findUniqueOrThrow({
-        where:{
-            email:decodedData?.email,
-            id:decodedData.id
-        }
-    });
-    const accessToken = generateToken({
-        email:isUserExist?.email,
-    });
-    return {
-        accessToken,
-    };
-}
+const refreshToken = async (token: string) => {
+  let decodedData;
+  try {
+    decodedData = decodedToken.verifyToken(
+      token,
+      config.jwt.refresh_token_secret as Secret
+    );
+  } catch (err) {
+    throw new Error("You are not authorized");
+  }
+  const isUserExist = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: decodedData?.email,
+      id: decodedData.id,
+    },
+  });
+  const accessToken = generateToken({
+    email: isUserExist?.email,
+  });
+  return {
+    accessToken,
+  };
+};
 
 // const createUserIntoDB = async(data:any) => {
 //     const hashedPassword:string=await bcrypt.hashSync(data.password, 10);
@@ -79,7 +82,7 @@ const refreshToken = async(token:string)=>{
 //       const user = await transactionClient.user.create({
 //         data: userData
 //       })
-  
+
 //       const profile = await transactionClient.userProfile.create({
 //           data:{...userProfile,userId:user.id}
 //       })
@@ -90,10 +93,41 @@ const refreshToken = async(token:string)=>{
 //     return result;
 //   }
 
+const changePassword = async (
+  id: string,
+  payload: { currentPassword: string; newPassword: string }
+) => {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: id,
+    },
+  });
+
+  const isCorrectPassword: Boolean = await bcrypt.compareSync(
+    payload.currentPassword,
+    user.password
+  );
+  if (!isCorrectPassword) {
+    throw new Error("Wrong Password");
+  }
+
+  const hashedPassword: string = await bcrypt.hash(payload.newPassword, 12);
+
+  const updatedData = await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: { password: hashedPassword },
+  });
+
+  console.log(updatedData);
+
+  return updatedData;
+};
 
 export const AuthServices = {
-    logInUser,
-    refreshToken,
-    // createUserIntoDB
-    
-}
+  logInUser,
+  refreshToken,
+  // createUserIntoDB,
+  changePassword,
+};
